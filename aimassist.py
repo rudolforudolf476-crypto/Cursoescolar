@@ -9,6 +9,7 @@ import time
 
 from targeting import select_target
 from friction import MouseFriction
+from softlock import SoftLock
 
 
 def main():
@@ -21,6 +22,8 @@ def main():
     parser.add_argument('--model', default='yolov8n.pt', help='COCO-compatible YOLO weights; downloaded on first use')
     parser.add_argument('--window-title', default='RedM', help='Required substring of foreground window title')
     parser.add_argument('--observe', action='store_true', help='Show detections without moving the mouse')
+    parser.add_argument('--profile', choices=['classic', 'ymt-normal'], default='classic',
+                        help='Optional experimental YMT timing; classic preserves immediate slowdown')
     args = parser.parse_args()
     if sys.platform != 'win32':
         parser.error('This application requires Windows 10/11.')
@@ -83,6 +86,7 @@ def main():
         center = (screen['left'] + screen['width'] / 2 - region['left'],
                   screen['top'] + screen['height'] / 2 - region['top'])
         friction = MouseFriction(user32, Input, MouseInput, args.slowdown)
+        gate = SoftLock(max_shift=max(10, args.radius * 0.75))
         if not args.observe:
             friction.start()
         try:
@@ -94,12 +98,14 @@ def main():
                 user32.GetWindowTextW(user32.GetForegroundWindow(), title, len(title))
                 if args.window_title.casefold() not in title.value.casefold():
                     friction.activate(False)
+                    gate.reset()
                     time.sleep(0.05)
                     continue
                 frame = np.asarray(capture.grab(region))[:, :, :3].copy()
                 result = model.predict(frame, classes=[0], conf=args.confidence, verbose=False, imgsz=640)[0]
                 boxes = result.boxes.data.cpu().tolist()
                 target = select_target(boxes, center, args.radius, args.confidence, args.aim_point)
+                assisted_target = gate.update(target, time.monotonic()) if args.profile == 'ymt-normal' else target
                 # Recheck focus and emergency key after potentially slow inference.
                 current = ctypes.create_unicode_buffer(1024)
                 user32.GetWindowTextW(user32.GetForegroundWindow(), current, len(current))
@@ -108,8 +114,10 @@ def main():
                     break
                 if friction.error:
                     raise friction.error
-                friction.activate(not args.observe and target is not None and
-                                  args.window_title.casefold() in current.value.casefold())
+                focused = args.window_title.casefold() in current.value.casefold()
+                if not focused:
+                    gate.reset()
+                friction.activate(not args.observe and assisted_target is not None and focused)
                 if args.observe:
                     cv2.circle(frame, tuple(map(round, center)), args.radius, (0, 200, 255), 1)
                     if target:
@@ -117,7 +125,8 @@ def main():
                     cv2.imshow('Detecao — F7 encerra', frame)
                     cv2.waitKey(1)
                 if time.monotonic() - last_report > 2:
-                    print('Alvo detetado' if target else 'Sem alvo no centro', flush=True)
+                    state = gate.state if args.profile == 'ymt-normal' else ('Alvo detetado' if target else 'Sem alvo no centro')
+                    print(state, flush=True)
                     last_report = time.monotonic()
                 time.sleep(0.005)
         finally:

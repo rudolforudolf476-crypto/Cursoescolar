@@ -81,3 +81,40 @@ interrupções e exceções Python. O launcher mostra o código de saída e ativ
 o diagnóstico de falhas nativas na consola. Se parar sem carregar em F7,
 envie as últimas linhas do registo e a mensagem/código da consola. Um processo
 terminado pelo Windows ou um crash nativo pode não conseguir gravar o motivo.
+
+## Perfil experimental inspirado em playertargetting.ymt
+
+```powershell
+.\iniciar.bat --profile ymt-normal --aim-point head --radius 35 --slowdown 0.20
+```
+
+O programa continua externo, por imagem, sem alterar ficheiros do jogo.
+`classic` é o perfil predefinido e mantém a desaceleração imediata anterior.
+Para esta atualização, copie também o novo `softlock.py` juntamente com
+`aimassist.py`, `targeting.py` e `friction.py`.
+
+O perfil normal do XML enviado contém `SoftLockTimeToAcquireTarget=0.25` e
+`SoftLockTime=2.5`. Aqui esses números são interpretados experimentalmente
+como segundos: 0,25 de deteção contínua antes de aplicar resistência e no máximo
+2,5 de assistência antes de voltar a adquirir. Não há documentação do motor
+neste ficheiro que confirme equivalência com o comportamento interno do jogo.
+A resistência continua fixa, sem snap, sem correções automáticas e sem seguimento
+ativo da cabeça. Os valores não resolvem falhas da deteção visual.
+
+Perder a deteção, sair do raio ou perder o foco liberta o rato imediatamente.
+Saltos superiores a 75% do raio (mínimo 10 píxeis) e intervalos entre deteções
+superiores a 0,30 segundos reiniciam a aquisição. Esses dois limites são escolhas
+do protótipo, não valores retirados do YMT. Numa máquina lenta, o perfil pode
+não chegar a ativar. A associação usa proximidade entre pontos, não identifica
+pessoas: dois alvos próximos podem ser confundidos.
+
+Não foram convertidos `SoftLockBreakValue=0.156`, distâncias, ângulos ou parâmetros
+de stick: não existe uma escala demonstrada que os relacione com píxeis e rato.
+Os tempos de blend também não foram aplicados para preservar a resistência fixa
+pedida. F7 encerra. O perfil precisa de validação no Windows/RedM.
+
+Para comparar com a versão anterior:
+
+```powershell
+.\iniciar.bat --profile classic --aim-point head --radius 35 --slowdown 0.20
+```
