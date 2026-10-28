@@ -118,3 +118,27 @@ Para comparar com a versão anterior:
 ```powershell
 .\iniciar.bat --profile classic --aim-point head --radius 35 --slowdown 0.20
 ```
+
+## Diagnosticar pessoas não reconhecidas
+
+```powershell
+.\iniciar.bat --observe --profile classic --radius 15 --confidence 0.25 --imgsz 960
+```
+
+O modo de observação não altera o rato. Mostra todas as pessoas reconhecidas
+na captura central, mesmo fora do raio: caixas e cabeça estimada em azul,
+exclusões da heurística do próprio personagem em vermelho, referência central
+em amarelo e alvo elegível em verde. Os números nas caixas são a confiança.
+A consola distingue agora quantidade de pessoas reconhecidas de alvo no raio,
+e informa a duração da inferência. Zero pessoas significa que o modelo não
+reconheceu pessoas acima do limiar na captura; pessoas sem alvo no centro
+significa que nenhuma referência passou os filtros de seleção.
+
+`--imgsz 960` aumenta a resolução de inferência, não a resolução da captura
+central de 640x640 (por predefinição). Pode ajudar o modelo mas não recupera
+pormenores inexistentes e aumenta o custo. Compare com `--imgsz 640`.
+Como alternativa, `--model yolov8s.pt` usa outro modelo COCO maior, transferido
+no primeiro arranque. Não foi validado para RedM e pode ser demasiado lento em
+CPU. Diminuir confiança pode aumentar falsos positivos. Não aumente a força
+para tentar corrigir uma deteção ausente. Envie uma captura da janela de
+observação para avaliar o alinhamento da cabeça estimada.

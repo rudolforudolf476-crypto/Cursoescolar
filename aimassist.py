@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--confidence', type=float, default=0.35)
     parser.add_argument('--monitor', type=int, default=1)
     parser.add_argument('--model', default='yolov8n.pt', help='COCO-compatible YOLO weights; downloaded on first use')
+    parser.add_argument('--imgsz', type=int, default=640, help='Inference size, multiple of 32; larger can be slower')
     parser.add_argument('--window-title', default='RedM', help='Required substring of foreground window title')
     parser.add_argument('--observe', action='store_true', help='Show detections without moving the mouse')
     parser.add_argument('--profile', choices=['classic', 'ymt-normal'], default='classic',
@@ -31,6 +32,8 @@ def main():
         parser.error('Use positive radius, slowdown and confidence in (0, 1].')
     if not args.window_title.strip():
         parser.error('--window-title must not be empty.')
+    if args.imgsz < 320 or args.imgsz > 1920 or args.imgsz % 32:
+        parser.error('--imgsz must be a multiple of 32 between 320 and 1920.')
 
     user32 = ctypes.WinDLL('user32', use_last_error=True)
     try:
@@ -102,7 +105,9 @@ def main():
                     time.sleep(0.05)
                     continue
                 frame = np.asarray(capture.grab(region))[:, :, :3].copy()
-                result = model.predict(frame, classes=[0], conf=args.confidence, verbose=False, imgsz=640)[0]
+                inference_start = time.monotonic()
+                result = model.predict(frame, classes=[0], conf=args.confidence, verbose=False, imgsz=args.imgsz)[0]
+                inference_ms = (time.monotonic() - inference_start) * 1000
                 boxes = result.boxes.data.cpu().tolist()
                 target = select_target(boxes, center, args.radius, args.confidence, args.aim_point)
                 assisted_target = gate.update(target, time.monotonic()) if args.profile == 'ymt-normal' else target
@@ -119,14 +124,30 @@ def main():
                     gate.reset()
                 friction.activate(not args.observe and assisted_target is not None and focused)
                 if args.observe:
+                    for x1, y1, x2, y2, score, class_id in boxes:
+                        if int(class_id) != 0:
+                            continue
+                        excluded = y2 >= center[1] * 1.8 and y2 - y1 >= center[1] * 0.8
+                        color = (0, 0, 255) if excluded else (255, 200, 0)
+                        cv2.rectangle(frame, (round(x1), round(y1)), (round(x2), round(y2)), color, 1)
+                        offset = 0.12 if args.aim_point == 'head' else 0.30
+                        point = (round((x1 + x2) / 2), round(y1 + (y2 - y1) * offset))
+                        cv2.circle(frame, point, 3, color, -1)
+                        label = f'{score:.2f}' + (' excluded' if excluded else '')
+                        cv2.putText(frame, label, (round(x1), max(15, round(y1) - 5)),
+                                    cv2.FONT_HERSHEY_SIMPLEX, .45, color, 1)
                     cv2.circle(frame, tuple(map(round, center)), args.radius, (0, 200, 255), 1)
+                    cv2.drawMarker(frame, tuple(map(round, center)), (0, 200, 255),
+                                   cv2.MARKER_CROSS, 10, 1)
                     if target:
                         cv2.circle(frame, (round(target.x), round(target.y)), 5, (0, 255, 0), -1)
+                    cv2.putText(frame, f'People: {len(boxes)} | inference: {inference_ms:.0f} ms',
+                                (8, 20), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 255, 255), 1)
                     cv2.imshow('Detecao — F7 encerra', frame)
                     cv2.waitKey(1)
                 if time.monotonic() - last_report > 2:
                     state = gate.state if args.profile == 'ymt-normal' else ('Alvo detetado' if target else 'Sem alvo no centro')
-                    print(state, flush=True)
+                    print(f'{state} | pessoas reconhecidas na captura: {len(boxes)} | inferencia: {inference_ms:.0f} ms', flush=True)
                     last_report = time.monotonic()
                 time.sleep(0.005)
         finally:
