@@ -1,6 +1,6 @@
 # Assistência visual para Windows — protótipo
 
-Captura a imagem e procura pessoas com YOLO. Quando o ponto do tronco detetado
+Captura a imagem e procura pessoas com YOLO. Quando o ponto estimado da cabeça
 fica a até 25 píxeis do centro, reduz os movimentos físicos do rato para 20%.
 Não puxa a mira, não faz snap e não gera movimento se o rato estiver parado.
 Fica ativo ao executar. **F8 encerra**. Só atua com RedM em primeiro plano.
@@ -38,7 +38,10 @@ Para executar com ajustes:
 ## Limites e validação
 
 É um protótipo. `--slowdown 0.20` aplica 20% do movimento; valores mais baixos
-produzem maior resistência. `--radius` define a distância ao ponto do tronco.
+produzem maior resistência. `--radius` define a distância ao ponto estimado da cabeça.
+`--aim-point head` (predefinido) usa 12% da altura da caixa da pessoa;
+`--aim-point torso` usa 30%. Isto não é deteção anatómica da cabeça: chapéus,
+posturas e oclusão podem deslocar a referência.
 A desaceleração usa um hook do Windows e entrada sintética. Jogos que leem
 Raw Input podem ignorar este mecanismo; nesse caso não haverá desaceleração.
 Não foi validado no RedM e não contorna Raw Input, anti-cheat ou bloqueios.
@@ -61,3 +64,12 @@ python3 -m unittest discover -s tests -v
 ```
 
 A captura, a inferência e o controlo de rato têm de ser validados no Windows.
+
+Para resistência forte perto da cabeça, sem snap:
+
+```powershell
+.\iniciar.bat --aim-point head --radius 15 --slowdown 0.05
+```
+
+Atualize também `targeting.py` ao atualizar `aimassist.py`. A mira não acompanha
+um alvo que se afaste: este modo só reduz o movimento manual perto da referência.

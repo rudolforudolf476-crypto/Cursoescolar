@@ -13,6 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--radius', type=int, default=25, help='Proximity radius in screen pixels')
     parser.add_argument('--slowdown', type=float, default=0.20, help='Mouse sensitivity multiplier near target')
+    parser.add_argument('--aim-point', choices=['head', 'torso'], default='head', help='Estimated reference inside person box; not a head detector')
     parser.add_argument('--confidence', type=float, default=0.35)
     parser.add_argument('--monitor', type=int, default=1)
     parser.add_argument('--model', default='yolov8n.pt', help='COCO-compatible YOLO weights; downloaded on first use')
@@ -93,7 +94,7 @@ def main():
                 frame = np.asarray(capture.grab(region))[:, :, :3].copy()
                 result = model.predict(frame, classes=[0], conf=args.confidence, verbose=False, imgsz=640)[0]
                 boxes = result.boxes.data.cpu().tolist()
-                target = select_target(boxes, center, args.radius, args.confidence)
+                target = select_target(boxes, center, args.radius, args.confidence, args.aim_point)
                 # Recheck focus and emergency key after potentially slow inference.
                 current = ctypes.create_unicode_buffer(1024)
                 user32.GetWindowTextW(user32.GetForegroundWindow(), current, len(current))

@@ -13,9 +13,14 @@ class TargetingTests(unittest.TestCase):
         self.assertIsNone(select_target(boxes, (100, 100), 50))
 
     def test_person_already_under_crosshair_remains_selected(self):
-        target = select_target([(90, 85, 110, 135, .9, 0)], (100, 100), 25)
+        target = select_target([(90, 94, 110, 144, .9, 0)], (100, 100), 25)
         self.assertIsNotNone(target)
         self.assertEqual(target.distance, 0)
+
+    def test_head_proximity_does_not_activate_at_torso(self):
+        boxes = [(90, 260, 110, 460, .9, 0)]
+        self.assertIsNone(select_target(boxes, (100, 320), 15, aim_point="head"))
+        self.assertEqual(select_target(boxes, (100, 320), 15, aim_point="torso").distance, 0)
 
     def test_proximity_does_not_select_distant_person(self):
         self.assertIsNone(select_target([(140, 85, 160, 135, .9, 0)], (100, 100), 25))
