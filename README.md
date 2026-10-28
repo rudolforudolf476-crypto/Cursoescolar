@@ -73,3 +73,11 @@ Para resistência forte perto da cabeça, sem snap:
 
 Atualize também `targeting.py` ao atualizar `aimassist.py`. A mira não acompanha
 um alvo que se afaste: este modo só reduz o movimento manual perto da referência.
+
+## Encerramento inesperado
+
+`aimassist.log`, na pasta do programa, regista arranques, saída por F8,
+interrupções e exceções Python. O launcher mostra o código de saída e ativa
+o diagnóstico de falhas nativas na consola. Se parar sem carregar em F8,
+envie as últimas linhas do registo e a mensagem/código da consola. Um processo
+terminado pelo Windows ou um crash nativo pode não conseguir gravar o motivo.

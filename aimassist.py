@@ -1,5 +1,7 @@
 """Screen-only Windows prototype. F8 exits globally."""
 import argparse
+import logging
+from pathlib import Path
 import ctypes
 from ctypes import wintypes
 import sys
@@ -68,7 +70,7 @@ def main():
     model = YOLO(args.model)
     print('Ativo automaticamente. F8 encerra. Apenas atua na janela indicada em primeiro plano.', flush=True)
     last_report = 0.0
-    with mss.mss() as capture:
+    with mss.MSS() as capture:
         if args.monitor < 1 or args.monitor >= len(capture.monitors):
             parser.error('Monitor inválido; use um índice entre 1 e o número de monitores.')
         screen = capture.monitors[args.monitor]
@@ -84,7 +86,10 @@ def main():
         if not args.observe:
             friction.start()
         try:
-            while not user32.GetAsyncKeyState(0x77) & 0x8000:
+            while True:
+                if user32.GetAsyncKeyState(0x77) & 0x8000:
+                    logging.warning('Encerramento: Windows reportou F8 premido (GetAsyncKeyState).')
+                    break
                 title = ctypes.create_unicode_buffer(1024)
                 user32.GetWindowTextW(user32.GetForegroundWindow(), title, len(title))
                 if args.window_title.casefold() not in title.value.casefold():
@@ -99,6 +104,7 @@ def main():
                 current = ctypes.create_unicode_buffer(1024)
                 user32.GetWindowTextW(user32.GetForegroundWindow(), current, len(current))
                 if user32.GetAsyncKeyState(0x77) & 0x8000:
+                    logging.warning('Encerramento: Windows reportou F8 premido depois da inferência.')
                     break
                 if friction.error:
                     raise friction.error
@@ -120,7 +126,23 @@ def main():
 
 
 if __name__ == '__main__':
+    log_path = Path(__file__).with_name('aimassist.log')
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s %(levelname)s %(message)s',
+        handlers=[logging.FileHandler(log_path, encoding='utf-8'), logging.StreamHandler()],
+    )
+    logging.info('Arranque do programa. Registo: %s', log_path.name)
     try:
         main()
     except KeyboardInterrupt:
-        pass
+        logging.warning('Encerramento: Python recebeu KeyboardInterrupt (normalmente Ctrl+C/Ctrl+Break).')
+        sys.exit(130)
+    except SystemExit as exc:
+        logging.info('Encerramento: SystemExit, código %s.', exc.code)
+        raise
+    except Exception:
+        logging.exception('Encerramento por erro inesperado:')
+        sys.exit(1)
+    else:
+        logging.info('Programa terminou normalmente após o pedido de saída registado acima.')

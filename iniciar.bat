@@ -5,5 +5,9 @@ if not exist .venv\Scripts\python.exe (
   pause
   exit /b 1
 )
-.venv\Scripts\python.exe aimassist.py %*
+.venv\Scripts\python.exe -X faulthandler -u aimassist.py %*
+set "aimassist_exit=%errorlevel%"
+echo.
+echo Programa terminou com codigo %aimassist_exit%. Consulte aimassist.log nesta pasta.
 pause
+exit /b %aimassist_exit%
