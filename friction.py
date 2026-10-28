@@ -58,7 +58,7 @@ class MouseFriction:
             if code >= 0 and message == 0x0200:
                 event = ctypes.cast(pointer, ctypes.POINTER(MouseEvent)).contents
                 if not event.flags & 0x01:  # Never rescale injected events.
-                    if time.monotonic() < self.until and not user32.GetAsyncKeyState(0x77) & 0x8000:
+                    if time.monotonic() < self.until and not user32.GetAsyncKeyState(0x76) & 0x8000:
                         cursor = wintypes.POINT()
                         if user32.GetCursorPos(ctypes.byref(cursor)):
                             raw = (event.pt.x - cursor.x, event.pt.y - cursor.y)

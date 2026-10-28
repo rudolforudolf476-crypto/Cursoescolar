@@ -1,4 +1,4 @@
-"""Screen-only Windows prototype. F8 exits globally."""
+"""Screen-only Windows prototype. F7 exits globally."""
 import argparse
 import logging
 from pathlib import Path
@@ -68,7 +68,7 @@ def main():
     from ultralytics import YOLO
 
     model = YOLO(args.model)
-    print('Ativo automaticamente. F8 encerra. Apenas atua na janela indicada em primeiro plano.', flush=True)
+    print('Ativo automaticamente. F7 encerra. Apenas atua na janela indicada em primeiro plano.', flush=True)
     last_report = 0.0
     with mss.MSS() as capture:
         if args.monitor < 1 or args.monitor >= len(capture.monitors):
@@ -87,8 +87,8 @@ def main():
             friction.start()
         try:
             while True:
-                if user32.GetAsyncKeyState(0x77) & 0x8000:
-                    logging.warning('Encerramento: Windows reportou F8 premido (GetAsyncKeyState).')
+                if user32.GetAsyncKeyState(0x76) & 0x8000:
+                    logging.warning('Encerramento: Windows reportou F7 premido (GetAsyncKeyState).')
                     break
                 title = ctypes.create_unicode_buffer(1024)
                 user32.GetWindowTextW(user32.GetForegroundWindow(), title, len(title))
@@ -103,8 +103,8 @@ def main():
                 # Recheck focus and emergency key after potentially slow inference.
                 current = ctypes.create_unicode_buffer(1024)
                 user32.GetWindowTextW(user32.GetForegroundWindow(), current, len(current))
-                if user32.GetAsyncKeyState(0x77) & 0x8000:
-                    logging.warning('Encerramento: Windows reportou F8 premido depois da inferência.')
+                if user32.GetAsyncKeyState(0x76) & 0x8000:
+                    logging.warning('Encerramento: Windows reportou F7 premido depois da inferência.')
                     break
                 if friction.error:
                     raise friction.error
@@ -114,7 +114,7 @@ def main():
                     cv2.circle(frame, tuple(map(round, center)), args.radius, (0, 200, 255), 1)
                     if target:
                         cv2.circle(frame, (round(target.x), round(target.y)), 5, (0, 255, 0), -1)
-                    cv2.imshow('Detecao — F8 encerra', frame)
+                    cv2.imshow('Detecao — F7 encerra', frame)
                     cv2.waitKey(1)
                 if time.monotonic() - last_report > 2:
                     print('Alvo detetado' if target else 'Sem alvo no centro', flush=True)

@@ -3,7 +3,7 @@
 Captura a imagem e procura pessoas com YOLO. Quando o ponto estimado da cabeça
 fica a até 25 píxeis do centro, reduz os movimentos físicos do rato para 20%.
 Não puxa a mira, não faz snap e não gera movimento se o rato estiver parado.
-Fica ativo ao executar. **F8 encerra**. Só atua com RedM em primeiro plano.
+Fica ativo ao executar. **F7 encerra**. Só atua com RedM em primeiro plano.
 Usa apenas onde as regras do servidor permitam automação.
 
 ## Instalação no Windows 10/11
@@ -76,8 +76,8 @@ um alvo que se afaste: este modo só reduz o movimento manual perto da referênc
 
 ## Encerramento inesperado
 
-`aimassist.log`, na pasta do programa, regista arranques, saída por F8,
+`aimassist.log`, na pasta do programa, regista arranques, saída por F7,
 interrupções e exceções Python. O launcher mostra o código de saída e ativa
-o diagnóstico de falhas nativas na consola. Se parar sem carregar em F8,
+o diagnóstico de falhas nativas na consola. Se parar sem carregar em F7,
 envie as últimas linhas do registo e a mensagem/código da consola. Um processo
 terminado pelo Windows ou um crash nativo pode não conseguir gravar o motivo.
