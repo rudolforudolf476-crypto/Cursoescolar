@@ -7,14 +7,14 @@ from ctypes import wintypes
 import sys
 import time
 
-from targeting import select_target, sensitivity_factor
+from targeting import select_target
 from friction import MouseFriction
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--radius', type=int, default=25, help='Proximity radius in screen pixels')
-    parser.add_argument('--slowdown', type=float, default=0.35, help='Minimum sensitivity at target centre; smoothly returns to 1 at radius')
+    parser.add_argument('--slowdown', type=float, default=0.20, help='Mouse sensitivity multiplier near target')
     parser.add_argument('--aim-point', choices=['head', 'torso'], default='head', help='Estimated reference inside person box; not a head detector')
     parser.add_argument('--confidence', type=float, default=0.35)
     parser.add_argument('--monitor', type=int, default=1)
@@ -108,10 +108,8 @@ def main():
                     break
                 if friction.error:
                     raise friction.error
-                factor = sensitivity_factor(target.distance if target else None,
-                                            args.radius, args.slowdown)
-                friction.activate(not args.observe and factor < 1.0 and
-                                  args.window_title.casefold() in current.value.casefold(), factor)
+                friction.activate(not args.observe and target is not None and
+                                  args.window_title.casefold() in current.value.casefold())
                 if args.observe:
                     cv2.circle(frame, tuple(map(round, center)), args.radius, (0, 200, 255), 1)
                     if target:

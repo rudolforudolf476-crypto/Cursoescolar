@@ -1,8 +1,7 @@
 # Assistência visual para Windows — protótipo
 
 Captura a imagem e procura pessoas com YOLO. Quando o ponto estimado da cabeça
-fica a até 25 píxeis do centro, reduz progressivamente os movimentos físicos do rato: 100% na periferia e
-35% no centro, por predefinição.
+fica a até 25 píxeis do centro, reduz os movimentos físicos do rato para 20%.
 Não puxa a mira, não faz snap e não gera movimento se o rato estiver parado.
 Fica ativo ao executar. **F7 encerra**. Só atua com RedM em primeiro plano.
 Usa apenas onde as regras do servidor permitam automação.
@@ -30,7 +29,7 @@ monitor, não o da janela. Para validar a deteção sem mover a mira:
 Para executar com ajustes:
 
 ```powershell
-.\iniciar.bat --radius 25 --slowdown 0.35 --monitor 1
+.\iniciar.bat --radius 25 --slowdown 0.20 --monitor 1
 ```
 
 `--window-title` permite adaptar o filtro ao título real da janela do jogo.
@@ -38,9 +37,8 @@ Para executar com ajustes:
 
 ## Limites e validação
 
-É um protótipo. `--slowdown 0.35` define o mínimo de 35% do movimento, mesmo no centro; valores mais baixos
-produzem maior resistência no centro. A transição é suave até 100% no limite
-do raio; a meia distância aplica 67,5% com o mínimo de 35%. `--radius` define a distância ao ponto estimado da cabeça.
+É um protótipo. `--slowdown 0.20` aplica 20% do movimento; valores mais baixos
+produzem maior resistência. `--radius` define a distância ao ponto estimado da cabeça.
 `--aim-point head` (predefinido) usa 12% da altura da caixa da pessoa;
 `--aim-point torso` usa 30%. Isto não é deteção anatómica da cabeça: chapéus,
 posturas e oclusão podem deslocar a referência.
@@ -73,7 +71,7 @@ Para resistência forte perto da cabeça, sem snap:
 .\iniciar.bat --aim-point head --radius 15 --slowdown 0.05
 ```
 
-Atualize `aimassist.py`, `targeting.py` e `friction.py` em conjunto. A mira não acompanha
+Atualize também `targeting.py` ao atualizar `aimassist.py`. A mira não acompanha
 um alvo que se afaste: este modo só reduz o movimento manual perto da referência.
 
 ## Encerramento inesperado
@@ -83,13 +81,3 @@ interrupções e exceções Python. O launcher mostra o código de saída e ativ
 o diagnóstico de falhas nativas na consola. Se parar sem carregar em F7,
 envie as últimas linhas do registo e a mensagem/código da consola. Um processo
 terminado pelo Windows ou um crash nativo pode não conseguir gravar o motivo.
-
-Para preservar melhor os microajustes manuais, comece com:
-
-```powershell
-.\iniciar.bat --aim-point head --radius 25 --slowdown 0.35
-```
-
-O valor anterior de `0.05` continua disponível, mas torna movimentos pequenos
-muito lentos mesmo junto ao centro. A resistência progressiva não gera
-correções automáticas e precisa de validação no Windows/RedM.

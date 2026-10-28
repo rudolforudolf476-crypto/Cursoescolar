@@ -10,17 +10,6 @@ class Target:
     distance: float
 
 
-def sensitivity_factor(distance, radius, minimum):
-    """Smoothly blend centre resistance into full sensitivity at the edge."""
-    if radius <= 0 or not 0 < minimum <= 1:
-        raise ValueError('Use positive radius and minimum in (0, 1].')
-    if distance is None:
-        return 1.0
-    ratio = max(0.0, min(1.0, distance / radius))
-    blend = ratio * ratio * (3.0 - 2.0 * ratio)
-    return minimum + (1.0 - minimum) * blend
-
-
 def select_target(boxes, center, radius, confidence=0.35, aim_point="head"):
     """Boxes contain x1, y1, x2, y2, score, class; COCO person is class 0.
 

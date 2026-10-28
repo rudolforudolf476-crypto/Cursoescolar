@@ -16,9 +16,7 @@ class MouseFriction:
         self.ready = threading.Event()
         self.thread = threading.Thread(target=self._run, daemon=True)
 
-    def activate(self, active, factor=None):
-        if factor is not None:
-            self.factor = factor
+    def activate(self, active):
         self.until = time.monotonic() + 0.15 if active else 0.0
 
     def start(self):
