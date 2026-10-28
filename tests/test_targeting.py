@@ -1,8 +1,17 @@
 import unittest
-from targeting import select_target
+from targeting import select_target, sensitivity_factor
 
 
 class TargetingTests(unittest.TestCase):
+    def test_progressive_resistance(self):
+        self.assertAlmostEqual(sensitivity_factor(0, 25, .35), .35)
+        self.assertAlmostEqual(sensitivity_factor(12.5, 25, .35), .675)
+        self.assertEqual(sensitivity_factor(25, 25, .35), 1)
+        self.assertEqual(sensitivity_factor(50, 25, .35), 1)
+        self.assertEqual(sensitivity_factor(None, 25, .35), 1)
+        values = [sensitivity_factor(d, 25, .35) for d in range(26)]
+        self.assertEqual(values, sorted(values))
+
     def test_closest_valid_person_wins(self):
         boxes = [(110, 90, 130, 130, .9, 0), (140, 90, 160, 130, .9, 0),
                  (101, 90, 103, 130, .9, 2), (105, 90, 110, 130, .1, 0)]
